@@ -39,6 +39,7 @@ class OffboardControl(Node):
         self.publisher_offboard_mode = self.create_publisher(OffboardControlMode, '/fmu/in/offboard_control_mode', qos_profile)
         self.publisher_velocity = self.create_publisher(Twist, '/fmu/in/setpoint_velocity/cmd_vel_unstamped', qos_profile)
         self.publisher_trajectory = self.create_publisher(TrajectorySetpoint, '/fmu/in/trajectory_setpoint', qos_profile)
+        
 
         timer_period = 0.02  # seconds
         self.timer = self.create_timer(timer_period, self.cmdloop_callback)
@@ -68,9 +69,9 @@ class OffboardControl(Node):
 
         if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
             # Create and publish Twist message
-            twist_msg = Twist()
-            twist_msg.linear = self.velocity
-            self.publisher_velocity.publish(twist_msg)
+            # twist_msg = Twist()
+            # twist_msg.linear = self.velocity
+            # self.publisher_velocity.publish(twist_msg)
 
             # Create and publish TrajectorySetpoint message with NaN values for position and acceleration
             trajectory_msg = TrajectorySetpoint()
@@ -85,12 +86,12 @@ class OffboardControl(Node):
             trajectory_msg.acceleration[1] = float('nan')
             trajectory_msg.acceleration[2] = float('nan')
             trajectory_msg.yaw = float('nan')
-            trajectory_msg.yaw_speed = float('nan')
+            trajectory_msg.yawspeed = float('nan')
 
             self.publisher_trajectory.publish(trajectory_msg)
 
             print("Velocity: ", self.velocity)
-            self.get_logger().info('Current commanded velocity: %s' % self.velocity)
+            self.get_logger().error('Current commanded velocity: %s' % self.velocity)
 
 
 
