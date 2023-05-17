@@ -40,37 +40,39 @@ CTRL-C to quit
 """
 
 moveBindings = {
-    'i': (1, 0, 0, 0),
-    'o': (1, 0, 0, -1),
-    'j': (0, 0, 0, 1),
-    'l': (0, 0, 0, -1),
-    'u': (1, 0, 0, 1),
-    ',': (-1, 0, 0, 0),
-    '.': (-1, 0, 0, 1),
-    'm': (-1, 0, 0, -1),
-    'O': (1, -1, 0, 0),
-    'I': (1, 0, 0, 0),
-    'J': (0, 1, 0, 0),
-    'L': (0, -1, 0, 0),
-    'U': (1, 1, 0, 0),
-    '<': (-1, 0, 0, 0),
-    '>': (-1, -1, 0, 0),
-    'M': (-1, 1, 0, 0),
-    'v': (0, 0, 1, 0),
-    'b': (0, 0, -1, 0),
-    't': (1, 0, 0, 0),
-    'g': (-1, 0, 0, 0),
-    'f': (0, 1, 0, 0),
-    'h': (0, -1, 0, 0),
+    # 'i': (1, 0, 0, 0),
+    # 'o': (1, 0, 0, -1),
+    # 'j': (0, 0, 0, 1),
+    # 'l': (0, 0, 0, -1),
+    # 'u': (1, 0, 0, 1),
+    # ',': (-1, 0, 0, 0),
+    # '.': (-1, 0, 0, 1),
+    # 'm': (-1, 0, 0, -1),
+    # 'O': (1, -1, 0, 0),
+    # 'I': (1, 0, 0, 0),
+    # 'J': (0, 1, 0, 0),
+    # 'L': (0, -1, 0, 0),
+    # 'U': (1, 1, 0, 0),
+    # '<': (-1, 0, 0, 0),
+    # '>': (-1, -1, 0, 0),
+    # 'M': (-1, 1, 0, 0),
+    'w': (0, 0, -1, 0), #Z+
+    's': (0, 0, 1, 0),#Z-
+    'a': (0, 0, 0, -1), #Yaw+
+    'd': (0, 0, 0, 1),#Yaw-
+    chr(65) : (1, 0, 0, 0),  #Up Arrow
+    chr(66) : (-1, 0, 0, 0), #Down Arrow
+    chr(67) : (0, 1, 0, 0), #Right Arrow
+    chr(68) : (0, -1, 0, 0),  #Left Arrow
 }
 
 speedBindings = {
-    'q': (1.1, 1.1),
-    'z': (.9, .9),
-    'w': (1.1, 1),
-    'x': (.9, 1),
-    'e': (1, 1.1),
-    'c': (1, .9),
+    # 'q': (1.1, 1.1),
+    # 'z': (.9, .9),
+    # 'w': (1.1, 1),
+    # 'x': (.9, 1),
+    # 'e': (1, 1.1),
+    # 'c': (1, .9),
 }
 
 
@@ -120,7 +122,7 @@ def main():
     pub = node.create_publisher(geometry_msgs.msg.Twist, '/offboard_velocity_cmd', qos_profile)
 
     speed = 0.5
-    turn = 1.0
+    turn = .2
     x = 0.0
     y = 0.0
     z = 0.0
@@ -129,6 +131,7 @@ def main():
     x_val = 0.0
     y_val = 0.0
     z_val = 0.0
+    yaw_val = 0.0
 
     try:
         print(msg)
@@ -161,12 +164,13 @@ def main():
             x_val = (x * speed) + x_val
             y_val = (y * speed) + y_val
             z_val = (z * speed) + z_val
+            yaw_val = (th * turn) + yaw_val
             twist.linear.x = x_val
             twist.linear.y = y_val
             twist.linear.z = z_val
             twist.angular.x = 0.0
             twist.angular.y = 0.0
-            twist.angular.z = th * turn
+            twist.angular.z = yaw_val
             pub.publish(twist)
             print(twist.linear.x, twist.linear.y, twist.linear.z, twist.angular.z)
 
