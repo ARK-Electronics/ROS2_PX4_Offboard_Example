@@ -1,0 +1,18 @@
+# Ignore build and install folders
+build/
+install/
+log/
+.devenv/
+.colcon_workspace
+.vscode/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore other common files
+*.swp
+*.swo
+*.swn
+*~
