@@ -14,6 +14,7 @@ from px4_msgs.msg import TrajectorySetpoint
 from px4_msgs.msg import VehicleStatus
 from px4_msgs.msg import VehicleAttitude
 from geometry_msgs.msg import Twist, Vector3
+from math import pi
 # from tf.transformations import euler_from_quaternion
 
 class OffboardControl(Node):
@@ -64,22 +65,40 @@ class OffboardControl(Node):
         print("  - offboard status: ", VehicleStatus.NAVIGATION_STATE_OFFBOARD)
         self.nav_state = msg.nav_state
 
+    # def flu_to_ned(flu):
+    #     #'''Converts Forward-Left-Up (ROS) coordinates to North-East-Down (PX4) coordinates.'''
+    #     ned = Vector3()
+    #     ned.x = -flu.y  # North = -Left
+    #     ned.y = flu.x   # East = Forward
+    #     ned.z = -flu.z  # Down = -Up
+    #     return ned
+
+
     def offboard_velocity_callback(self, msg):
         # Implement your logic here
-        self.velocity = msg.linear
-        self.yaw = msg.angular.z
+        # flu_velocity = Vector3()
+        # flu_velocity = msg.linear
+        # self.velocity = self.flu_to_ned(flu_velocity) #convert to NED
 
-        cos_yaw = np.cos(self.yaw)
-        sin_yaw = np.sin(self.yaw)
-        self.velocity.x = msg.linear.x * cos_yaw - msg.linear.y * sin_yaw
-        self.velocity.y = msg.linear.x * sin_yaw + msg.linear.y * cos_yaw
-        self.velocity.z = msg.linear.z
-        self.yaw = msg.angular.z
+        self.velocity.x = -msg.linear.y
+        self.velocity.y = msg.linear.x
+        self.velocity.z = -msg.linear.z
+
+        self.yaw = msg.angular.z + pi
+
+        # cos_yaw = np.cos(self.yaw)
+        # sin_yaw = np.sin(self.yaw)
+        # self.velocity.x = msg.linear.x * cos_yaw - msg.linear.y * sin_yaw
+        # self.velocity.y = msg.linear.x * sin_yaw + msg.linear.y * cos_yaw
+        # self.velocity.z = msg.linear.z
+        # self.yaw = msg.angular.z
 
     def attitude_callback(self, msg):
         orientation_q = msg.q
-        self.trueYaw = np.arctan2(2.0*(orientation_q[3]*orientation_q[0] + orientation_q[1]*orientation_q[2]), 
-                                  1.0 - 2.0*(orientation_q[0]*orientation_q[0] + orientation_q[1]*orientation_q[1]))
+        self.trueYaw = -(np.arctan2(2.0*(orientation_q[3]*orientation_q[0] + orientation_q[1]*orientation_q[2]), 
+                                  1.0 - 2.0*(orientation_q[0]*orientation_q[0] + orientation_q[1]*orientation_q[1])))
+        self.get_logger().error('TrueYaw: %s' % self.trueYaw)
+        
 
     def cmdloop_callback(self):
         # Publish offboard control modes
@@ -97,8 +116,8 @@ class OffboardControl(Node):
             # Compute velocity in the world frame
             cos_yaw = np.cos(self.trueYaw)
             sin_yaw = np.sin(self.trueYaw)
-            velocity_world_x = self.velocity.x * cos_yaw - self.velocity.y * sin_yaw
-            velocity_world_y = self.velocity.x * sin_yaw + self.velocity.y * cos_yaw
+            velocity_world_x = (self.velocity.x * cos_yaw - self.velocity.y * sin_yaw)
+            velocity_world_y = (self.velocity.x * sin_yaw + self.velocity.y * cos_yaw)
 
             # Create and publish Twist message
             # twist_msg = Twist()
@@ -124,7 +143,7 @@ class OffboardControl(Node):
 
             # print("Velocity: ", self.velocity)
             # self.get_logger().error('Current commanded velocity: %s' % self.velocity)
-            self.get_logger().error('Current commanded yaw rate: %s' % self.yaw)
+            # self.get_logger().error('Current commanded yaw rate: %s' % self.yaw)
 
 
 
