@@ -77,7 +77,9 @@ class OffboardControl(Node):
         self.yaw = msg.angular.z
 
     def attitude_callback(self, msg):
-        
+        orientation_q = msg.q
+        self.trueYaw = np.arctan2(2.0*(orientation_q[3]*orientation_q[0] + orientation_q[1]*orientation_q[2]), 
+                                  1.0 - 2.0*(orientation_q[0]*orientation_q[0] + orientation_q[1]*orientation_q[1]))
 
     def cmdloop_callback(self):
         # Publish offboard control modes
