@@ -58,7 +58,7 @@ class OffboardControl(Node):
         self.arm_timer_ = self.create_timer(arm_timer_period, self.arm_timer_callback)
 
         timer_period = 0.02  # seconds
-        self.timer = self.create_timer(timer_period, self.cmdloop_callback)
+        # self.timer = self.create_timer(timer_period, self.cmdloop_callback)
 
         self.nav_state = VehicleStatus.NAVIGATION_STATE_MAX
         self.dt = timer_period
@@ -69,7 +69,7 @@ class OffboardControl(Node):
 
     def arm_timer_callback(self):
         self.get_logger().error('SetpointCounter: %s' % self.offboard_setpoint_counter_)
-        if(self.offboard_setpoint_counter_ >= 10):
+        if(self.offboard_setpoint_counter_ >= 100 and self.offboard_setpoint_counter_ < 120):
             # Change to Offboard mode after 10 setpoints
             self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
             # Arm the vehicle
@@ -78,8 +78,11 @@ class OffboardControl(Node):
 
 
             # stop the counter after reaching 11
-        if (self.offboard_setpoint_counter_ < 11):
+        if (self.offboard_setpoint_counter_ < 1020):
             self.offboard_setpoint_counter_ += 1
+
+        if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
+            self.take_off()
 
     # Arm the vehicle
     def arm(self):
@@ -104,6 +107,20 @@ class OffboardControl(Node):
         print("NAV_STATUS: ", msg.nav_state)
         print("  - offboard status: ", VehicleStatus.NAVIGATION_STATE_OFFBOARD)
         self.nav_state = msg.nav_state
+
+    def take_off(self):
+        offboard_msg = OffboardControlMode()
+        offboard_msg.timestamp = int(Clock().now().nanoseconds / 1000)
+        offboard_msg.position = True
+        offboard_msg.velocity = False
+        offboard_msg.acceleration = False
+        self.publisher_offboard_mode.publish(offboard_msg)
+
+        trajectory_msg = TrajectorySetpoint()
+        trajectory_msg.position[0] = 0.0
+        trajectory_msg.position[1] = 0.0
+        trajectory_msg.position[2] = -5.0
+        self.publisher_trajectory.publish(trajectory_msg)
 
     # def flu_to_ned(flu):
     #     #'''Converts Forward-Left-Up (ROS) coordinates to North-East-Down (PX4) coordinates.'''
