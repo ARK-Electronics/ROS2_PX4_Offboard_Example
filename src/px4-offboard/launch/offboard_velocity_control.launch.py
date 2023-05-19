@@ -21,6 +21,13 @@ def generate_launch_description():
         Node(
             package='px4_offboard',
             namespace='px4_offboard',
+            executable='control',
+            name='control',
+            prefix='xterm -e'
+        ),
+        Node(
+            package='px4_offboard',
+            namespace='px4_offboard',
             executable='velocity_control',
             name='velocity'
         ),
