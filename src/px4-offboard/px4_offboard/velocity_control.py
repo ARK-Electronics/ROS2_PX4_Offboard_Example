@@ -84,7 +84,7 @@ class OffboardControl(Node):
         self.velocity.y = msg.linear.x
         self.velocity.z = -msg.linear.z
 
-        self.yaw = msg.angular.z + pi
+        self.yaw = msg.angular.z
 
         # cos_yaw = np.cos(self.yaw)
         # sin_yaw = np.sin(self.yaw)
@@ -136,7 +136,7 @@ class OffboardControl(Node):
             trajectory_msg.acceleration[0] = float('nan')
             trajectory_msg.acceleration[1] = float('nan')
             trajectory_msg.acceleration[2] = float('nan')
-            trajectory_msg.yaw = self.yaw
+            trajectory_msg.yaw = float('nan')
             trajectory_msg.yawspeed = self.yaw
 
             self.publisher_trajectory.publish(trajectory_msg)

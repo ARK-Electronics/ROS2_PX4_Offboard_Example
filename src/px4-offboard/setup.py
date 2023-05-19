@@ -16,6 +16,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob('launch/*launch.[pxy][yma]*')),
         (os.path.join('share', package_name), glob('resource/*rviz'))
+        # (os.path.join('share', package_name), ['scripts/TerminatorScript.sh'])
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -29,7 +30,8 @@ setup(
                 'offboard_control = px4_offboard.offboard_control:main',
                 'visualizer = px4_offboard.visualizer:main',
                 'velocity_control = px4_offboard.velocity_control:main',
-                'control = px4_offboard.control:main'
+                'control = px4_offboard.control:main',
+                'processes = px4_offboard.processes:main'
         ],
     },
 )
