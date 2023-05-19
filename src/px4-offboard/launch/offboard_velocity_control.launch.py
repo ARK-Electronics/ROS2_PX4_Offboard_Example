@@ -23,7 +23,7 @@ def generate_launch_description():
             namespace='px4_offboard',
             executable='control',
             name='control',
-            prefix='xterm -e'
+            prefix='gnome-terminal --',
         ),
         Node(
             package='px4_offboard',
