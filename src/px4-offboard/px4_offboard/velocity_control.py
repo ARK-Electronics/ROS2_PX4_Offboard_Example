@@ -13,6 +13,7 @@ from px4_msgs.msg import OffboardControlMode
 from px4_msgs.msg import TrajectorySetpoint
 from px4_msgs.msg import VehicleStatus
 from px4_msgs.msg import VehicleAttitude
+from px4_msgs.msg import VehicleCommand
 from geometry_msgs.msg import Twist, Vector3
 from math import pi
 # from tf.transformations import euler_from_quaternion
@@ -49,7 +50,12 @@ class OffboardControl(Node):
         self.publisher_offboard_mode = self.create_publisher(OffboardControlMode, '/fmu/in/offboard_control_mode', qos_profile)
         self.publisher_velocity = self.create_publisher(Twist, '/fmu/in/setpoint_velocity/cmd_vel_unstamped', qos_profile)
         self.publisher_trajectory = self.create_publisher(TrajectorySetpoint, '/fmu/in/trajectory_setpoint', qos_profile)
+        self.vehicle_command_publisher_ = self.create_publisher(VehicleCommand, "/fmu/in/vehicle_command", 10)
+
+        self.offboard_setpoint_counter_ = 0
         
+        arm_timer_period = .1
+        self.arm_timer_ = self.create_timer(arm_timer_period, self.arm_timer_callback)
 
         timer_period = 0.02  # seconds
         self.timer = self.create_timer(timer_period, self.cmdloop_callback)
@@ -58,6 +64,40 @@ class OffboardControl(Node):
         self.dt = timer_period
         self.velocity = Vector3()
         self.yaw = 0.0
+        self.trueYaw = 0.0
+        self.offboardMode = False
+
+    def arm_timer_callback(self):
+        self.get_logger().error('SetpointCounter: %s' % self.offboard_setpoint_counter_)
+        if(self.offboard_setpoint_counter_ >= 10):
+            # Change to Offboard mode after 10 setpoints
+            self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
+            # Arm the vehicle
+            self.arm()
+            self.offboardMode = True
+
+
+            # stop the counter after reaching 11
+        if (self.offboard_setpoint_counter_ < 11):
+            self.offboard_setpoint_counter_ += 1
+
+    # Arm the vehicle
+    def arm(self):
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0)
+        self.get_logger().info("Arm command send")
+
+    def publish_vehicle_command(self, command, param1=0.0, param2=0.0):
+        msg = VehicleCommand()
+        msg.param1 = param1
+        msg.param2 = param2
+        msg.command = command  # command ID
+        msg.target_system = 1  # system which should execute the command
+        msg.target_component = 1  # component which should execute the command, 0 for all components
+        msg.source_system = 1  # system sending the command
+        msg.source_component = 1  # component sending the command
+        msg.from_external = True
+        msg.timestamp = int(Clock().now().nanoseconds / 1000) # time in microseconds
+        self.vehicle_command_publisher_.publish(msg)
 
     def vehicle_status_callback(self, msg):
         # TODO: handle NED->ENU transformation
@@ -97,7 +137,7 @@ class OffboardControl(Node):
         orientation_q = msg.q
         self.trueYaw = -(np.arctan2(2.0*(orientation_q[3]*orientation_q[0] + orientation_q[1]*orientation_q[2]), 
                                   1.0 - 2.0*(orientation_q[0]*orientation_q[0] + orientation_q[1]*orientation_q[1])))
-        self.get_logger().error('TrueYaw: %s' % self.trueYaw)
+        # self.get_logger().error('TrueYaw: %s' % self.trueYaw)
         
 
     def cmdloop_callback(self):
@@ -109,8 +149,9 @@ class OffboardControl(Node):
         offboard_msg.acceleration = False
         self.publisher_offboard_mode.publish(offboard_msg)
 
-        if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
 
+        if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD or self.offboardMode == True:
+            # self.get_logger().error('OFFBOARD ON')
             
 
             # Compute velocity in the world frame
