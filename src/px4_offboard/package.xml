@@ -3,8 +3,8 @@
 <package format="3">
   <name>px4_offboard</name>
   <version>0.0.0</version>
-  <description>ROS2 python interface for px4</description>
-  <maintainer email="jalim@ethz.ch">jaeyoung</maintainer>
+  <description>ROS2 PX4 Interface Velocity Control</description>
+  <maintainer email="braden@arkelectron.com">braden</maintainer>
   <license>BSD-3</license>
   
   <depend>px4_msgs</depend>
