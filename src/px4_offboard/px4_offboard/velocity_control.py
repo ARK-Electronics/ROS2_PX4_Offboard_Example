@@ -1,7 +1,39 @@
 #!/usr/bin/env python
+############################################################################
+#
+#   Copyright (C) 2022 PX4 Development Team. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in
+#    the documentation and/or other materials provided with the
+#    distribution.
+# 3. Neither the name PX4 nor the names of its contributors may be
+#    used to endorse or promote products derived from this software
+#    without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+# COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+# BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+# OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED
+# AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+# ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+# POSSIBILITY OF SUCH DAMAGE.
+#
+############################################################################
 
 __author__ = "Braden Wagstaff"
-__contact__ = "bradenwagstaff1@gmail.com"
+__contact__ = "braden@arkelectron.com"
 
 import rclpy
 from rclpy.node import Node
@@ -16,7 +48,6 @@ from px4_msgs.msg import VehicleAttitude
 from px4_msgs.msg import VehicleCommand
 from geometry_msgs.msg import Twist, Vector3
 from math import pi
-# from tf.transformations import euler_from_quaternion
 
 class OffboardControl(Node):
 
@@ -69,7 +100,7 @@ class OffboardControl(Node):
 
     def arm_timer_callback(self):
         self.get_logger().error('SetpointCounter: %s' % self.offboard_setpoint_counter_)
-        if(self.offboard_setpoint_counter_ >= 100 and self.offboard_setpoint_counter_ < 120):
+        if(self.offboard_setpoint_counter_ >= 100 and self.offboard_setpoint_counter_ < 300):
             # Change to Offboard mode after 10 setpoints
             self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
             # Arm the vehicle
@@ -116,11 +147,14 @@ class OffboardControl(Node):
         offboard_msg.acceleration = False
         self.publisher_offboard_mode.publish(offboard_msg)
 
-        trajectory_msg = TrajectorySetpoint()
-        trajectory_msg.position[0] = 0.0
-        trajectory_msg.position[1] = 0.0
-        trajectory_msg.position[2] = -5.0
-        self.publisher_trajectory.publish(trajectory_msg)
+        if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
+            trajectory_msg = TrajectorySetpoint()
+            trajectory_msg.position[0] = 0.0
+            trajectory_msg.position[1] = 0.0
+            trajectory_msg.position[2] = -5.0
+            self.publisher_trajectory.publish(trajectory_msg)
+            self.get_logger().error('Takeoff')
+
 
     # def flu_to_ned(flu):
     #     #'''Converts Forward-Left-Up (ROS) coordinates to North-East-Down (PX4) coordinates.'''
