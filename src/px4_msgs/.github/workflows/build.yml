@@ -1,0 +1,29 @@
+name: Build package
+
+# CI runs over all branches that do not contain 'ros1' in the name
+on:
+  push:
+    branches:
+      - 'main'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-20.04
+    container: px4io/px4-dev-ros2-${{ matrix.ros2_distro }}:2021-05-31
+    strategy:
+      matrix:
+        ros2_distro: [foxy, humble, rolling]
+    steps:
+      - uses: actions/checkout@v3
+      - name: build
+        run: |
+          source /opt/ros/${{ matrix.ros2_distro }}/setup.bash
+          mkdir -p ~/colcon_ws/src
+          cd ~/colcon_ws
+          ln -s ${GITHUB_WORKSPACE} src/px4_msgs
+          colcon build --cmake-args --symlink-install --event-handlers console_direct+
