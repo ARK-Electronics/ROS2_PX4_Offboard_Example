@@ -97,33 +97,51 @@ class OffboardControl(Node):
         self.yaw = 0.0
         self.trueYaw = 0.0
         self.offboardMode = False
+        self.flightCheck = False
+        self.countStart = False
+        self.myCnt = 0
 
     def arm_timer_callback(self):
-        self.get_logger().error('SetpointCounter: %s' % self.offboard_setpoint_counter_)
-        if(self.offboard_setpoint_counter_ >= 100 and self.offboard_setpoint_counter_ < 300):
-            # Change to Offboard mode after 10 setpoints
-            self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
-            # Arm the vehicle
-            self.arm()
-            self.offboardMode = True
+        # self.get_logger().error('SetpointCounter: %s' % self.offboard_setpoint_counter_)
+        if(self.flightCheck):
+            if(self.myCnt > 10):
+                # self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.) 
+                self.arm()
+
+            if(self.myCnt > 20):
+                self.take_off()
 
 
-            # stop the counter after reaching 11
-        if (self.offboard_setpoint_counter_ < 1020):
-            self.offboard_setpoint_counter_ += 1
+            # if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
+                # self.take_off()
 
-        if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
-            self.take_off()
+            self.myCnt += 1
+        
+        # if(self.offboard_setpoint_counter_ >= 100 and self.offboard_setpoint_counter_ < 1000):
+        #     # Change to Offboard mode after 10 setpoints
+        #     self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
+        #     # Arm the vehicle
+        #     self.arm()
+        #     # self.offboardMode = True
+
+
+        #     # stop the counter after reaching 11
+        # # if (self.offboard_setpoint_counter_ < 1020):
+        self.offboard_setpoint_counter_ += 1
+
+        # if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
+        #     self.take_off()
 
     # Arm the vehicle
     def arm(self):
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0)
         self.get_logger().info("Arm command send")
 
-    def publish_vehicle_command(self, command, param1=0.0, param2=0.0):
+    def publish_vehicle_command(self, command, param1=0.0, param2=0.0, param7=0.0):
         msg = VehicleCommand()
         msg.param1 = param1
         msg.param2 = param2
+        msg.param7 = param7
         msg.command = command  # command ID
         msg.target_system = 1  # system which should execute the command
         msg.target_component = 1  # component which should execute the command, 0 for all components
@@ -135,25 +153,32 @@ class OffboardControl(Node):
 
     def vehicle_status_callback(self, msg):
         # TODO: handle NED->ENU transformation
-        print("NAV_STATUS: ", msg.nav_state)
-        print("  - offboard status: ", VehicleStatus.NAVIGATION_STATE_OFFBOARD)
+        # self.get_logger().info(f"NAV_STATUS: {msg.nav_state}")
+        self.get_logger().info(f"FlightCheck: {msg.pre_flight_checks_pass}")
+
+        # self.get_logger().info("NAV_STATUS: %s", msg.nav_state)
+        # self.get_logger().info(f"  - offboard status: {VehicleStatus.NAVIGATION_STATE_OFFBOARD}")
         self.nav_state = msg.nav_state
+        self.flightCheck = msg.pre_flight_checks_pass
 
     def take_off(self):
-        offboard_msg = OffboardControlMode()
-        offboard_msg.timestamp = int(Clock().now().nanoseconds / 1000)
-        offboard_msg.position = True
-        offboard_msg.velocity = False
-        offboard_msg.acceleration = False
-        self.publisher_offboard_mode.publish(offboard_msg)
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF, param7=-5.0)
 
-        if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
-            trajectory_msg = TrajectorySetpoint()
-            trajectory_msg.position[0] = 0.0
-            trajectory_msg.position[1] = 0.0
-            trajectory_msg.position[2] = -5.0
-            self.publisher_trajectory.publish(trajectory_msg)
-            self.get_logger().error('Takeoff')
+        self.get_logger().info("Takeoff command send")
+        # offboard_msg = OffboardControlMode()
+        # offboard_msg.timestamp = int(Clock().now().nanoseconds / 1000)
+        # offboard_msg.position = True
+        # offboard_msg.velocity = False
+        # offboard_msg.acceleration = False
+        # self.publisher_offboard_mode.publish(offboard_msg)
+
+        # if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
+        #     trajectory_msg = TrajectorySetpoint()
+        #     trajectory_msg.position[0] = 0.0
+        #     trajectory_msg.position[1] = 0.0
+        #     trajectory_msg.position[2] = -5.0
+        #     self.publisher_trajectory.publish(trajectory_msg)
+        #     self.get_logger().error("Takeoff")
 
 
     # def flu_to_ned(flu):
