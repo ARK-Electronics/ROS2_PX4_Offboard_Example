@@ -12,18 +12,20 @@ Everything runs from a single launch command.
   -Teleop Terminal
   -ROS Node
   
-Build the packages(should just be px4_msgs and px4_offboard)
-From /src run source install/setup.bash
-Run 
-  ros2 launch px4_offboard offboard_velocity_control.launch.py
+Build the packages(should just be px4_msgs and px4_offboard) with _colcon build_
+
+From /src run source _install/setup.bash_
+
+Run   _ros2 launch px4_offboard offboard_velocity_control.launch.py_
 
 This should run everything needed. The drone should arm, takeoff, and then switch into offboard mode.
 Focus into the teleop terminal and use WASD and the arrow keys to control the drone. 
 
 *IMPORTANT*
+
 When you close the simulation DO NOT 'X' out of the Gazebo simulation GUI. It will close to GUI but continue to run in the background.
 You need to Ctrl+C in the terminal. I do this for everything just to be sure but Gazebo will error on the next run if you don't do this.
 
-If you need to change specifics of what is launching in the launch script or if you need to launc QGC, visit processes.py or offboard_velocity_control.launch.py
+If you need to change specifics of what is launching in the launch script or if you need to launch QGC, visit processes.py or offboard_velocity_control.launch.py
 
-Message Braden Wagstaff on the PX4 Discord for questoins or email me at braden@arkelectron.com
+Message Braden Wagstaff on the PX4 Discord for questions or email me at braden@arkelectron.com
