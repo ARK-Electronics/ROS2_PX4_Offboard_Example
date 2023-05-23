@@ -89,7 +89,7 @@ class OffboardControl(Node):
         self.arm_timer_ = self.create_timer(arm_timer_period, self.arm_timer_callback)
 
         timer_period = 0.02  # seconds
-        # self.timer = self.create_timer(timer_period, self.cmdloop_callback)
+        self.timer = self.create_timer(timer_period, self.cmdloop_callback)
 
         self.nav_state = VehicleStatus.NAVIGATION_STATE_MAX
         self.dt = timer_period
@@ -108,12 +108,13 @@ class OffboardControl(Node):
                 # self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.) 
                 self.arm()
 
-            if(self.myCnt > 20):
+            if(self.myCnt == 20):
                 self.take_off()
 
 
-            # if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
-                # self.take_off()
+            if(self.myCnt > 20 and self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
+                self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
+                self.offboardMode = True
 
             self.myCnt += 1
         
@@ -127,7 +128,7 @@ class OffboardControl(Node):
 
         #     # stop the counter after reaching 11
         # # if (self.offboard_setpoint_counter_ < 1020):
-        self.offboard_setpoint_counter_ += 1
+        # self.offboard_setpoint_counter_ += 1
 
         # if(self.nav_state == VehicleStatus.ARMING_STATE_ARMED):
         #     self.take_off()
@@ -153,8 +154,8 @@ class OffboardControl(Node):
 
     def vehicle_status_callback(self, msg):
         # TODO: handle NED->ENU transformation
-        # self.get_logger().info(f"NAV_STATUS: {msg.nav_state}")
-        self.get_logger().info(f"FlightCheck: {msg.pre_flight_checks_pass}")
+        self.get_logger().info(f"NAV_STATUS: {msg.nav_state}")
+        # self.get_logger().info(f"FlightCheck: {msg.pre_flight_checks_pass}")
 
         # self.get_logger().info("NAV_STATUS: %s", msg.nav_state)
         # self.get_logger().info(f"  - offboard status: {VehicleStatus.NAVIGATION_STATE_OFFBOARD}")
@@ -162,7 +163,7 @@ class OffboardControl(Node):
         self.flightCheck = msg.pre_flight_checks_pass
 
     def take_off(self):
-        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF, param7=-5.0)
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF, param1 = 1.0, param7=5.0)
 
         self.get_logger().info("Takeoff command send")
         # offboard_msg = OffboardControlMode()
@@ -217,50 +218,51 @@ class OffboardControl(Node):
         
 
     def cmdloop_callback(self):
-        # Publish offboard control modes
-        offboard_msg = OffboardControlMode()
-        offboard_msg.timestamp = int(Clock().now().nanoseconds / 1000)
-        offboard_msg.position = False
-        offboard_msg.velocity = True
-        offboard_msg.acceleration = False
-        self.publisher_offboard_mode.publish(offboard_msg)
+        if(self.offboardMode == True):
+            # Publish offboard control modes
+            offboard_msg = OffboardControlMode()
+            offboard_msg.timestamp = int(Clock().now().nanoseconds / 1000)
+            offboard_msg.position = False
+            offboard_msg.velocity = True
+            offboard_msg.acceleration = False
+            self.publisher_offboard_mode.publish(offboard_msg)
 
 
-        if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD or self.offboardMode == True:
-            # self.get_logger().error('OFFBOARD ON')
-            
+            if self.nav_state == VehicleStatus.NAVIGATION_STATE_OFFBOARD:
+                # self.get_logger().error('OFFBOARD ON')
+                
 
-            # Compute velocity in the world frame
-            cos_yaw = np.cos(self.trueYaw)
-            sin_yaw = np.sin(self.trueYaw)
-            velocity_world_x = (self.velocity.x * cos_yaw - self.velocity.y * sin_yaw)
-            velocity_world_y = (self.velocity.x * sin_yaw + self.velocity.y * cos_yaw)
+                # Compute velocity in the world frame
+                cos_yaw = np.cos(self.trueYaw)
+                sin_yaw = np.sin(self.trueYaw)
+                velocity_world_x = (self.velocity.x * cos_yaw - self.velocity.y * sin_yaw)
+                velocity_world_y = (self.velocity.x * sin_yaw + self.velocity.y * cos_yaw)
 
-            # Create and publish Twist message
-            # twist_msg = Twist()
-            # twist_msg.linear = self.velocity
-            # self.publisher_velocity.publish(twist_msg)
+                # Create and publish Twist message
+                # twist_msg = Twist()
+                # twist_msg.linear = self.velocity
+                # self.publisher_velocity.publish(twist_msg)
 
-            # Create and publish TrajectorySetpoint message with NaN values for position and acceleration
-            trajectory_msg = TrajectorySetpoint()
-            trajectory_msg.timestamp = int(Clock().now().nanoseconds / 1000)
-            trajectory_msg.velocity[0] = velocity_world_x
-            trajectory_msg.velocity[1] = velocity_world_y
-            trajectory_msg.velocity[2] = self.velocity.z
-            trajectory_msg.position[0] = float('nan')
-            trajectory_msg.position[1] = float('nan')
-            trajectory_msg.position[2] = float('nan')
-            trajectory_msg.acceleration[0] = float('nan')
-            trajectory_msg.acceleration[1] = float('nan')
-            trajectory_msg.acceleration[2] = float('nan')
-            trajectory_msg.yaw = float('nan')
-            trajectory_msg.yawspeed = self.yaw
+                # Create and publish TrajectorySetpoint message with NaN values for position and acceleration
+                trajectory_msg = TrajectorySetpoint()
+                trajectory_msg.timestamp = int(Clock().now().nanoseconds / 1000)
+                trajectory_msg.velocity[0] = velocity_world_x
+                trajectory_msg.velocity[1] = velocity_world_y
+                trajectory_msg.velocity[2] = self.velocity.z
+                trajectory_msg.position[0] = float('nan')
+                trajectory_msg.position[1] = float('nan')
+                trajectory_msg.position[2] = float('nan')
+                trajectory_msg.acceleration[0] = float('nan')
+                trajectory_msg.acceleration[1] = float('nan')
+                trajectory_msg.acceleration[2] = float('nan')
+                trajectory_msg.yaw = float('nan')
+                trajectory_msg.yawspeed = self.yaw
 
-            self.publisher_trajectory.publish(trajectory_msg)
+                self.publisher_trajectory.publish(trajectory_msg)
 
-            # print("Velocity: ", self.velocity)
-            # self.get_logger().error('Current commanded velocity: %s' % self.velocity)
-            # self.get_logger().error('Current commanded yaw rate: %s' % self.yaw)
+                # print("Velocity: ", self.velocity)
+                # self.get_logger().error('Current commanded velocity: %s' % self.velocity)
+                # self.get_logger().error('Current commanded yaw rate: %s' % self.yaw)
 
 
 
