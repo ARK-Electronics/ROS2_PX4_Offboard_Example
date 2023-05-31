@@ -14,11 +14,16 @@ else:
 
 msg = """
 This node takes keypresses from the keyboard and publishes them
-as Twist messages. It works best with a US keyboard layout.
-Using the arrow keys and WASD you have Mode 2 controls.
-Arrow keys control x and y planar movement
-W and S control z movement
-A and D control yaw
+as Twist messages. 
+Using the arrow keys and WASD you have Mode 2 RC controls.
+W: Up
+S: Down
+A: Yaw Left
+D: Yaw Right
+Up Arrow: Pitch Forward
+Down Arrow: Pitch Backward
+Left Arrow: Roll Left
+Right Arrow: Roll Right
 """
 
 moveBindings = {
@@ -26,11 +31,12 @@ moveBindings = {
     's': (0, 0, -1, 0),#Z-
     'a': (0, 0, 0, -1), #Yaw+
     'd': (0, 0, 0, 1),#Yaw-
-    chr(67) : (-1, 0, 0, 0),  #Up Arrow
-    chr(68) : (1, 0, 0, 0), #Down Arrow
-    chr(65) : (0, 1, 0, 0), #Right Arrow
-    chr(66) : (0, -1, 0, 0),  #Left Arrow
+    '\x1b[A' : (-1, 0, 0, 0),  #Up Arrow
+    '\x1b[B' : (1, 0, 0, 0), #Down Arrow
+    '\x1b[C' : (0, 1, 0, 0), #Right Arrow
+    '\x1b[D' : (0, -1, 0, 0),  #Left Arrow
 }
+
 
 speedBindings = {
     # 'q': (1.1, 1.1),
@@ -50,8 +56,12 @@ def getKey(settings):
         tty.setraw(sys.stdin.fileno())
         # sys.stdin.read() returns a string on Linux
         key = sys.stdin.read(1)
+        if key == '\x1b':  # if the first character is \x1b, we might be dealing with an arrow key
+            additional_chars = sys.stdin.read(2)  # read the next two characters
+            key += additional_chars  # append these characters to the key
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
     return key
+
 
 
 def saveTerminalSettings():
