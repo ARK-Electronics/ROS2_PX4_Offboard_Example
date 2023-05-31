@@ -31,8 +31,8 @@ moveBindings = {
     's': (0, 0, -1, 0),#Z-
     'a': (0, 0, 0, -1), #Yaw+
     'd': (0, 0, 0, 1),#Yaw-
-    '\x1b[A' : (-1, 0, 0, 0),  #Up Arrow
-    '\x1b[B' : (1, 0, 0, 0), #Down Arrow
+    '\x1b[A' : (1, 0, 0, 0),  #Up Arrow
+    '\x1b[B' : (-1, 0, 0, 0), #Down Arrow
     '\x1b[C' : (0, 1, 0, 0), #Right Arrow
     '\x1b[D' : (0, -1, 0, 0),  #Left Arrow
 }
@@ -111,7 +111,7 @@ def main():
 
     try:
         print(msg)
-        print(vels(speed, turn))
+        # print(vels(speed, turn))
         while True:
             key = getKey(settings)
             if key in moveBindings.keys():
@@ -148,7 +148,8 @@ def main():
             twist.angular.y = 0.0
             twist.angular.z = yaw_val
             pub.publish(twist)
-            print(twist.linear.x, twist.linear.y, twist.linear.z, twist.angular.z)
+            print("X:",twist.linear.x, "   Y:",twist.linear.y, "   Z:",twist.linear.z, "   Yaw:",twist.angular.z)
+            
 
     except Exception as e:
         print(e)
