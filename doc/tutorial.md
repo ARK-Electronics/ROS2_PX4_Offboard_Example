@@ -29,6 +29,13 @@ Install Python dependencies as mentioned in the [PX4 Docs](https://docs.px4.io/m
 pip3 install --user -U empy pyros-genmsg setuptools
 ```
 
+I've also run into these dependencies. When we run Gazebo for the first time it will get mad at you if you haven't run these
+```
+pip3 install kconfiglib
+pip3 install --user jinja2
+pip3 install --user jsonschema
+```
+
 ### Build Micro DDS
 As mentioned in the [PX4 Docs](https://docs.px4.io/main/en/ros/ros2_comm.html#setup-micro-xrce-dds-agent-client) run this code in order to build MicroDDS on your machine
 
@@ -42,6 +49,9 @@ make
 sudo make install
 sudo ldconfig /usr/local/lib/
 ```
+
+
+
 
 ### Clone Repo
 This git repo is structured like a ROS2 workspace. Once you clone it, and build it, you should be able to run the code in the next section.
