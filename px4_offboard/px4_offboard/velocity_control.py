@@ -98,6 +98,7 @@ class OffboardControl(Node):
         self.timer = self.create_timer(timer_period, self.cmdloop_callback)
 
         self.nav_state = VehicleStatus.NAVIGATION_STATE_MAX
+        self.arm_state = VehicleStatus.ARMING_STATE_MAX
         self.velocity = Vector3()
         self.yaw = 0.0  #yaw value we send as command
         self.trueYaw = 0.0  #current yaw value of drone
@@ -105,22 +106,81 @@ class OffboardControl(Node):
         self.flightCheck = False
         self.myCnt = 0
 
+        self.states = {
+            "IDLE": self.state_init,
+            "ARMING": self.state_arming,
+            "TAKEOFF": self.state_takeoff,
+            "LOITER": self.state_loiter,
+            "OFFBOARD": self.state_offboard
+        }
+        self.current_state = "IDLE"
+
     #callback function that arms, takes off, and switches to offboard mode
     def arm_timer_callback(self):
-        if(self.flightCheck):
-            if(self.myCnt > 10):
-                # self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.) 
-                self.arm()
+        # if(self.flightCheck):
+        #     if(self.myCnt > 10 and (self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER or self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_TAKEOFF)):
+        #         # self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.) 
+        #         self.arm()
 
-            if(self.myCnt == 20):
-                self.take_off()
+        #     if(self.myCnt == 20):
+        #         self.take_off()
 
 
-            if(self.myCnt > 20 and self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
-                self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
-                self.offboardMode = True
+        #     if(self.myCnt > 20 and self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
+        #         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
+        #         self.offboardMode = True
 
-            self.myCnt += 1
+        #     self.myCnt += 1
+
+        match self.current_state:
+            case "IDLE":
+                if(self.flightCheck):
+                    self.current_state = "ARMING"
+            case "ARMING":
+                if(not(self.flightCheck)):
+                    self.current_state = "IDLE"
+                elif(self.arm_state == VehicleStatus.ARMING_STATE_ARMED):
+                    self.current_state = "OFFBOARD"
+                self.state_arming()
+            case "TAKEOFF":
+                if(not(self.flightCheck)):
+                    self.current_state = "IDLE"
+                elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_TAKEOFF):
+                    self.current_state = "LOITER"
+                self.state_arming()
+            case "LOITER":
+                if(not(self.flightCheck)):
+                    self.current_state = "IDLE"
+                elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
+                    self.current_state = "OFFBOARD"
+            case "OFFBOARD":
+                if(not(self.flightCheck)):
+                    self.current_state = "IDLE"
+                self.state_arming()
+
+        self.get_logger().info(self.current_state)
+
+    def state_init(self):
+        self.myCnt = 0
+
+    def state_arming(self):
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0)
+        self.get_logger().info("Arm command send")
+
+    def state_takeoff(self):
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF, param1 = 1.0, param7=5.0) # param7 is altitude in meters
+        self.get_logger().info("Takeoff command send")
+
+    def state_loiter(self):
+        self.get_logger().info("Loiter Status")
+
+    def state_offboard(self):
+        self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
+        self.offboardMode = True
+
+
+    
+
         
 
     # Arms the vehicle
@@ -151,9 +211,11 @@ class OffboardControl(Node):
     #receives and sets vehicle status values 
     def vehicle_status_callback(self, msg):
         self.get_logger().info(f"NAV_STATUS: {msg.nav_state}")
+        self.get_logger().info(f"ARM STATUS: {msg.arming_state}")
         # self.get_logger().info(f"FlightCheck: {msg.pre_flight_checks_pass}")
 
         self.nav_state = msg.nav_state
+        self.arm_state = msg.arming_state
         self.flightCheck = msg.pre_flight_checks_pass
 
     
