@@ -115,7 +115,9 @@ class OffboardControl(Node):
         self.flightCheck = False
         self.myCnt = 0
         self.arm_message = False
+        self.failsafe = False
 
+        #states with corresponding callback functions that run once when state switches
         self.states = {
             "IDLE": self.state_init,
             "ARMING": self.state_arming,
@@ -130,49 +132,45 @@ class OffboardControl(Node):
         self.arm_message = msg.data
 
     #callback function that arms, takes off, and switches to offboard mode
+    #implements a finite state machine
     def arm_timer_callback(self):
-        # if(self.flightCheck):
-        #     if(self.myCnt > 10 and (self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER or self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_TAKEOFF)):
-        #         # self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.) 
-        #         self.arm()
-
-        #     if(self.myCnt == 20):
-        #         self.take_off()
-
-
-        #     if(self.myCnt > 20 and self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
-        #         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
-        #         self.offboardMode = True
-
-        #     self.myCnt += 1
 
         match self.current_state:
             case "IDLE":
                 if(self.flightCheck and self.arm_message == True):
                     self.current_state = "ARMING"
+
             case "ARMING":
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
                 elif(self.arm_state == VehicleStatus.ARMING_STATE_ARMED and self.myCnt > 10):
                     self.current_state = "TAKEOFF"
-                self.arm()
+                self.arm() #send arm command
+
             case "TAKEOFF":
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
                 elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_TAKEOFF):
                     self.current_state = "LOITER"
-                self.arm()
-                self.take_off()
-            case "LOITER":
+                self.arm() #send arm command
+                self.take_off() #send takeoff command
+
+            # waits in this state while taking off, and the 
+            # moment VehicleStatus switches to Loiter state it will switch to offboard
+            case "LOITER": 
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
                 elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
                     self.current_state = "OFFBOARD"
                 self.arm()
+
             case "OFFBOARD":
-                if(not(self.flightCheck) or self.arm_state == VehicleStatus.ARMING_STATE_STANDBY):
+                if(not(self.flightCheck) or self.arm_state == VehicleStatus.ARMING_STATE_STANDBY or self.failsafe == True):
                     self.current_state = "IDLE"
                 self.state_offboard()
+
+        if(self.arm_state != VehicleStatus.ARMING_STATE_ARMED):
+            self.arm_message = False
 
         self.get_logger().info(self.current_state)
         self.myCnt += 1
@@ -237,6 +235,7 @@ class OffboardControl(Node):
 
         self.nav_state = msg.nav_state
         self.arm_state = msg.arming_state
+        self.failsafe = msg.failsafe
         self.flightCheck = msg.pre_flight_checks_pass
 
     

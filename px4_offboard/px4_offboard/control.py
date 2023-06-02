@@ -26,6 +26,8 @@ Up Arrow: Pitch Forward
 Down Arrow: Pitch Backward
 Left Arrow: Roll Left
 Right Arrow: Roll Right
+
+Press SPACE to arm/disarm the drone
 """
 
 moveBindings = {
