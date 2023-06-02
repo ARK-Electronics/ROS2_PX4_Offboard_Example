@@ -48,6 +48,8 @@ from px4_msgs.msg import VehicleAttitude
 from px4_msgs.msg import VehicleCommand
 from geometry_msgs.msg import Twist, Vector3
 from math import pi
+from std_msgs.msg import Bool
+
 
 class OffboardControl(Node):
 
@@ -78,6 +80,13 @@ class OffboardControl(Node):
             '/fmu/out/vehicle_attitude',
             self.attitude_callback,
             qos_profile)
+        
+        self.my_bool_sub = self.create_subscription(
+            Bool,
+            '/arm_message',
+            self.arm_message_callback,
+            qos_profile)
+
 
         #Create publishers
         self.publisher_offboard_mode = self.create_publisher(OffboardControlMode, '/fmu/in/offboard_control_mode', qos_profile)
@@ -105,6 +114,7 @@ class OffboardControl(Node):
         self.offboardMode = False
         self.flightCheck = False
         self.myCnt = 0
+        self.arm_message = False
 
         self.states = {
             "IDLE": self.state_init,
@@ -114,6 +124,10 @@ class OffboardControl(Node):
             "OFFBOARD": self.state_offboard
         }
         self.current_state = "IDLE"
+
+
+    def arm_message_callback(self, msg):
+        self.arm_message = msg.data
 
     #callback function that arms, takes off, and switches to offboard mode
     def arm_timer_callback(self):
@@ -134,47 +148,54 @@ class OffboardControl(Node):
 
         match self.current_state:
             case "IDLE":
-                if(self.flightCheck):
+                if(self.flightCheck and self.arm_message == True):
                     self.current_state = "ARMING"
             case "ARMING":
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
-                elif(self.arm_state == VehicleStatus.ARMING_STATE_ARMED):
-                    self.current_state = "OFFBOARD"
-                self.state_arming()
+                elif(self.arm_state == VehicleStatus.ARMING_STATE_ARMED and self.myCnt > 10):
+                    self.current_state = "TAKEOFF"
+                self.arm()
             case "TAKEOFF":
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
                 elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_TAKEOFF):
                     self.current_state = "LOITER"
-                self.state_arming()
+                self.arm()
+                self.take_off()
             case "LOITER":
                 if(not(self.flightCheck)):
                     self.current_state = "IDLE"
                 elif(self.nav_state == VehicleStatus.NAVIGATION_STATE_AUTO_LOITER):
                     self.current_state = "OFFBOARD"
+                self.arm()
             case "OFFBOARD":
-                if(not(self.flightCheck)):
+                if(not(self.flightCheck) or self.arm_state == VehicleStatus.ARMING_STATE_STANDBY):
                     self.current_state = "IDLE"
-                self.state_arming()
+                self.state_offboard()
 
         self.get_logger().info(self.current_state)
+        self.myCnt += 1
 
     def state_init(self):
         self.myCnt = 0
 
     def state_arming(self):
+        self.myCnt = 0
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_COMPONENT_ARM_DISARM, 1.0)
         self.get_logger().info("Arm command send")
 
     def state_takeoff(self):
+        self.myCnt = 0
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_NAV_TAKEOFF, param1 = 1.0, param7=5.0) # param7 is altitude in meters
         self.get_logger().info("Takeoff command send")
 
     def state_loiter(self):
+        self.myCnt = 0
         self.get_logger().info("Loiter Status")
 
     def state_offboard(self):
+        self.myCnt = 0
         self.publish_vehicle_command(VehicleCommand.VEHICLE_CMD_DO_SET_MODE, 1., 6.)
         self.offboardMode = True
 

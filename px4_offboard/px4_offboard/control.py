@@ -3,6 +3,8 @@ import sys
 
 import geometry_msgs.msg
 import rclpy
+import std_msgs.msg
+
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 
 if sys.platform == 'win32':
@@ -31,10 +33,10 @@ moveBindings = {
     's': (0, 0, -1, 0),#Z-
     'a': (0, 0, 0, -1), #Yaw+
     'd': (0, 0, 0, 1),#Yaw-
-    '\x1b[A' : (1, 0, 0, 0),  #Up Arrow
-    '\x1b[B' : (-1, 0, 0, 0), #Down Arrow
-    '\x1b[C' : (0, 1, 0, 0), #Right Arrow
-    '\x1b[D' : (0, -1, 0, 0),  #Left Arrow
+    '\x1b[A' : (0, 1, 0, 0),  #Up Arrow
+    '\x1b[B' : (0, -1, 0, 0), #Down Arrow
+    '\x1b[C' : (-1, 0, 0, 0), #Right Arrow
+    '\x1b[D' : (1, 0, 0, 0),  #Left Arrow
 }
 
 
@@ -97,6 +99,10 @@ def main():
 
     pub = node.create_publisher(geometry_msgs.msg.Twist, '/offboard_velocity_cmd', qos_profile)
 
+    arm_toggle = False
+    arm_pub = node.create_publisher(std_msgs.msg.Bool, '/arm_message', qos_profile)
+
+
     speed = 0.5
     turn = .2
     x = 0.0
@@ -119,14 +125,15 @@ def main():
                 y = moveBindings[key][1]
                 z = moveBindings[key][2]
                 th = moveBindings[key][3]
-            elif key in speedBindings.keys():
-                speed = speed * speedBindings[key][0]
-                turn = turn * speedBindings[key][1]
+            # elif key in speedBindings.keys():
+            #     speed = speed * speedBindings[key][0]
+            #     turn = turn * speedBindings[key][1]
 
-                print(vels(speed, turn))
-                if (status == 14):
-                    print(msg)
-                status = (status + 1) % 15
+            #     print(vels(speed, turn))
+            #     if (status == 14):
+            #         print(msg)
+            #     status = (status + 1) % 15
+            
             else:
                 x = 0.0
                 y = 0.0
@@ -134,6 +141,13 @@ def main():
                 th = 0.0
                 if (key == '\x03'):
                     break
+
+            if key == ' ':  # ASCII value for space
+                arm_toggle = not arm_toggle  # Flip the value of arm_toggle
+                arm_msg = std_msgs.msg.Bool()
+                arm_msg.data = arm_toggle
+                arm_pub.publish(arm_msg)
+                print(f"Arm toggle is now: {arm_toggle}")
 
             twist = geometry_msgs.msg.Twist()
             
