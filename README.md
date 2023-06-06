@@ -51,8 +51,6 @@ sudo ldconfig /usr/local/lib/
 ```
 
 ### Setup Workspace
-This git repo is structured like a ROS2 workspace. Once you clone it, and build it, you should be able to run the code in the next section.
-
 This git repo is intended to be a ROS2 package that is cloned into a ROS2 workspace.
 
 We're going to create a workspace in our home directory, and then clone in this repo and also the px4_msgs repo. 
