@@ -27,13 +27,23 @@ git clone https://github.com/PX4/PX4-Autopilot.git --recursive
 ```
 
 
-### ROS2 Humble
+### Install ROS2 Humble
 To install ROS2 Humble follow the steps [here](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+
+### Install Dependencies
 
 Install Python dependencies as mentioned in the [PX4 Docs](https://docs.px4.io/main/en/ros/ros2_comm.html#install-ros-2) with this code
 
 ```
 pip3 install --user -U empy pyros-genmsg setuptools
+```
+
+I also found that without these packages installed Gazebo has issues loading
+
+```
+pip3 install kconfiglib
+pip install --user jsonschema
+pip install --user jinja2
 ```
 
 ### Build Micro DDS

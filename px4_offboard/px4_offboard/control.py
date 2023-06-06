@@ -127,14 +127,6 @@ def main():
                 y = moveBindings[key][1]
                 z = moveBindings[key][2]
                 th = moveBindings[key][3]
-            # elif key in speedBindings.keys():
-            #     speed = speed * speedBindings[key][0]
-            #     turn = turn * speedBindings[key][1]
-
-            #     print(vels(speed, turn))
-            #     if (status == 14):
-            #         print(msg)
-            #     status = (status + 1) % 15
             
             else:
                 x = 0.0
