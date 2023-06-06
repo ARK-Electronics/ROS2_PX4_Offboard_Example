@@ -142,7 +142,7 @@ This will run numerous things. In no particular order, it will run:
 * RVIZ will open in a new window
 * velocity_control.py runs as it's own node, and is the main node of this example
 
-Once everything is running, the UAV should arm and be ready for takeoff. You should be able to focus into the control.py terminal window and use the keyboard to control the UAV. The controls mimic Mode 2 RC Transmitter controls with WASD being the left joystick and the arrow keys being the right joystick. The controls are as follows:
+Once everything is running, you should be able to focus into the control.py terminal window, arm, and takeoff. The controls mimic Mode 2 RC Transmitter controls with WASD being the left joystick and the arrow keys being the right joystick. The controls are as follows:
 * W: Up
 * S: Down
 * A: Yaw Left
@@ -151,6 +151,9 @@ Once everything is running, the UAV should arm and be ready for takeoff. You sho
 * Down Arrow: Pitch Backward
 * Left Arrow: Roll Left
 * Right Arrow: Roll Right
+* Space: Arm/Disarm
+
+Pressing *Space* will arm the drone. Wait a moment and it will takeoff and switch into offboard mode. You can now control it using the above keys. If you land the drone, it will disarm and to takeoff again you will need to toggle the arm switch off and back on with the space bar. 
 
 Using the controls, click *W* to send a vertical veloctiy command and take off. Once in the air you can control it as you see fit.
 
