@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from px4_msgs.msg import VehicleGlobalPosition
-from px4_msgs.msg import VehicleGlobalPosition
 from px4_msgs.msg import VehicleStatus
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSHistoryPolicy, QoSDurabilityPolicy
 
@@ -21,26 +20,24 @@ class MySubscriber(Node):
         self.gps_subscription = self.create_subscription(
             VehicleGlobalPosition,
             '/fmu/out/vehicle_gps_position',
-            self.listener_callback,
+            self.GPS_callback,
             qos_profile)
         self.gps_subscription  # prevent unused variable warning
 
-        # super().__init__('my_status')
-        # self.subscription = self.create_subscription(
-        #     VehicleStatus,
-        #     '/fmu/out/vehicle_status',
-        #     self.status_callback,
-        #     qos_profile)
-        # self.subscription  # prevent unused variable warning
+        super().__init__('my_status')
+        self.subscription = self.create_subscription(
+            VehicleStatus,
+            '/fmu/out/vehicle_status',
+            self.status_callback,
+            qos_profile)
+        self.subscription  # prevent unused variable warning
 
-    def listener_callback(self, msg):
-        self.get_logger().info('I heard: "%s"' % msg.lat)
+    def GPS_callback(self, msg):
+        self.get_logger().info('GPS: "%s"\n\n' % msg)
 
-    
-    
 
-    # def status_callback(self, msg):
-    #     self.get_logger().info('I heard: \n')
+    def status_callback(self, msg):
+        self.get_logger().info('Status: "%s"\n\n' % msg)
 
 
 def main(args=None):
