@@ -21,10 +21,18 @@ I've taken his example and added some functionality.
 ## Setup Steps
 
 ### Install PX4 Autopilot
-To [Install PX4](https://docs.px4.io/main/en/dev_setup/building_px4.html#download-the-px4-source-code) run this code 
+To [Install PX4](https://docs.px4.io/main/en/dev_setup/dev_env_linux_ubuntu.html#simulation-and-nuttx-pixhawk-targets) run this code 
 ```
 git clone https://github.com/PX4/PX4-Autopilot.git --recursive
 ```
+
+Run this script in a bash shell to install everything
+
+```
+bash ./PX4-Autopilot/Tools/setup/ubuntu.sh
+```
+
+You will now need to restart your computer before continuing.
 
 
 ### Install ROS2 Humble
