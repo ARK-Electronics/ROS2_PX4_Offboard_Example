@@ -119,6 +119,7 @@ This will need to be run in every terminal that wants to run ROS2 commands. An e
 To build these two packages, be sure your are still in the src directory of your workspace, and run this code
 
 ```
+cd ..
 colcon build
 ```
 As mentioned in Jaeyoung Lim's [example](https://github.com/Jaeyoung-Lim/px4-offboard/blob/master/doc/ROS2_PX4_Offboard_Tutorial.md) you will get some warnings about setup.py but as long as there are no errors, you should be good to go.
