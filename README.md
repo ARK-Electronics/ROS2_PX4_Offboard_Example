@@ -116,9 +116,10 @@ source /opt/ros/humble/setup.bash
 
 This will need to be run in every terminal that wants to run ROS2 commands. An easy way to get around this, is to add this command to your .bashrc file. This will run this command every time you open a new terminal window.
 
-To build these two packages, be sure your are still in the src directory of your workspace, and run this code
+To build these two packages, you must be in workspace directory not in src, run this code to change directory from src to one step back i.e. root of your workspace and build the packages
 
 ```
+cd ..
 colcon build
 ```
 As mentioned in Jaeyoung Lim's [example](https://github.com/Jaeyoung-Lim/px4-offboard/blob/master/doc/ROS2_PX4_Offboard_Tutorial.md) you will get some warnings about setup.py but as long as there are no errors, you should be good to go.
