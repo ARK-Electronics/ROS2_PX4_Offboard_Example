@@ -9,6 +9,11 @@ https://github.com/Jaeyoung-Lim/px4-offboard
 
 I've taken his example and added some functionality. 
 
+## YouTube Tutorial
+We published a walkthrough tutorial on YouTube to demonstrate the example and to help beginners set up their enviornment. The video is helpful, but be sure to always defer to this Readme file for instructions. Some changes have been made since the video was posted, meaning that though it is helpful, it is not 100% accurate.
+
+You can watch the video [here](https://www.youtube.com/watch?v=8gKIP0OqHdQ).
+
 ### Prerequisites
 * ROS2 Humble
 * PX4 Autopilot
