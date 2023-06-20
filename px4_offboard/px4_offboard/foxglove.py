@@ -71,9 +71,9 @@ class MySubscriber(Node):
         nav_sat_fix_msg.header.stamp.nanosec = int((msg.timestamp % 1e6) * 1e3)
         nav_sat_fix_msg.header._frame_id = 'PX4_Frame_ID'
 
-        nav_sat_fix_msg.latitude = float(msg.lat)
-        nav_sat_fix_msg.longitude = float(msg.lon)
-        nav_sat_fix_msg.altitude = float(msg.alt)
+        nav_sat_fix_msg.latitude = float(msg.lat / 1e7)
+        nav_sat_fix_msg.longitude = float(msg.lon / 1e7)
+        nav_sat_fix_msg.altitude = float(msg.alt / 1e4)
 
         # ChatGPT's solution to covariance
         nav_sat_fix_msg.position_covariance[0] = float(msg.eph**2)  # Variance in East direction
