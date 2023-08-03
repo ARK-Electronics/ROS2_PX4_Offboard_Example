@@ -31,7 +31,9 @@ setup(
                 'visualizer = px4_offboard.visualizer:main',
                 'velocity_control = px4_offboard.velocity_control:main',
                 'control = px4_offboard.control:main',
-                'processes = px4_offboard.processes:main'
+                'processes = px4_offboard.processes:main',
+                'rover_control = px4_offboard.rover_control:main',
+                'joystick = px4_offboard.joystick:main'
         ],
     },
 )
