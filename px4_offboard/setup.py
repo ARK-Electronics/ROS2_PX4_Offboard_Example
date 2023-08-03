@@ -18,7 +18,7 @@ setup(
         (os.path.join('share', package_name), glob('resource/*rviz'))
         # (os.path.join('share', package_name), ['scripts/TerminatorScript.sh'])
     ],
-    install_requires=['setuptools'],
+    install_requires=['setuptools', 'pygame'],
     zip_safe=True,
     maintainer='Braden',
     maintainer_email='braden@arkelectron.com',
