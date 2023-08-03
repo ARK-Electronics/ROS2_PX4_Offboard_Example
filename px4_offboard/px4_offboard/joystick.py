@@ -32,16 +32,24 @@ class JoystickNode(Node):
             
             axes = []
             for i in range(joystick.get_numaxes()):
-                axes.append(joystick.get_axis(i))
-            
+                axes.append(float(joystick.get_axis(i)))
+                print(str(i) + ": " + str(joystick.get_axis(i)))
+
             buttons = []
             for i in range(joystick.get_numbuttons()):
-                buttons.append(joystick.get_button(i))
+                buttons.append(int(joystick.get_button(i)))
+
+            for i in range(joystick.get_numhats()):
+                hat = joystick.get_hat(i)
+                axes.append(float(hat[0]))
+                axes.append(float(hat[1]))
+                print(str(i + joystick.get_numaxes()) + ": " + str(joystick.get_hat(i)))
 
             joy = Joy()
             joy.axes = axes
             joy.buttons = buttons
             self.publisher_.publish(joy)
+
             clock.tick(100)  # And this line
 
 def main(args=None):
