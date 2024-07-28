@@ -174,7 +174,7 @@ class OffboardControl(Node):
                 self.arm()
 
             case "OFFBOARD":
-                if(not(self.flightCheck) or self.arm_state == VehicleStatus.ARMING_STATE_DISARMED or self.failsafe == True):
+                if(not(self.flightCheck) or self.arm_state != VehicleStatus.ARMING_STATE_ARMED or self.failsafe == True):
                     self.current_state = "IDLE"
                     self.get_logger().info(f"Offboard, Flight Check Failed")
                 self.state_offboard()
