@@ -28,7 +28,7 @@ You can watch the video [here](https://www.youtube.com/watch?v=8gKIP0OqHdQ).
 ### Install PX4 Autopilot
 To [Install PX4](https://docs.px4.io/main/en/dev_setup/dev_env_linux_ubuntu.html#simulation-and-nuttx-pixhawk-targets) run this code 
 ```
-git clone https://github.com/PX4/PX4-Autopilot.git --recursive -b release/1.14
+git clone https://github.com/PX4/PX4-Autopilot.git --recursive -b release/1.15
 ```
 
 Run this script in a bash shell to install everything
@@ -97,7 +97,7 @@ We first will need the px4_msgs package. Our ROS2 nodes will rely on the message
 Be sure you're in the src directory of your workspace and then run this code to clone in the px4_msgs repo
 
 ```
-git clone https://github.com/PX4/px4_msgs.git -b release/1.14
+git clone https://github.com/PX4/px4_msgs.git -b release/1.15
 ```
 
 Once again be sure you are still in the src directory of your workspace. Run this code to clone in our example package
